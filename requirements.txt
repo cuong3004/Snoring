@@ -1,0 +1,5 @@
+lightly
+gdown
+unzip
+wandb
+albumentations >= 1.3
