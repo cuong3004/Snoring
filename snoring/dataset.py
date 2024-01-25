@@ -42,14 +42,14 @@ class ToSpectrograms(object):
         
         mel_spectrogram = T.MelSpectrogram(
             sample_rate=sr,
-            n_fft=n_fft,
+            n_fft=self.n_fft,
             win_length=None,
-            hop_length=hop_length,
+            hop_length=self.hop_length,
             center=True,
             pad_mode="reflect",
             power=2.0,
             norm="slaney",
-            n_mels=n_mels,
+            n_mels=self.n_mels,
             mel_scale="htk",
         )
         
@@ -67,23 +67,23 @@ class ToSpectrograms(object):
         
         
         
-        if self.transform:
-			sample = self.transform(sample)
+#         if self.transform:
+# 			sample = self.transform(sample)
    
-   n_fft = 883
-        hop_length = 441
-        n_mels = 40
+#    n_fft = 883
+#         hop_length = 441
+#         n_mels = 40
    
-		return sample
+# 		return sample
 
-        mel_spectrogram = torchaudio.transforms.MelSpectrogram(
-            sample_rate=sr,
-            n_fft=n_fft,
-            hop_length=hop_length,
-            n_mels=n_mels
-        )(wav)
+#         mel_spectrogram = torchaudio.transforms.MelSpectrogram(
+#             sample_rate=sr,
+#             n_fft=n_fft,
+#             hop_length=hop_length,
+#             n_mels=n_mels
+#         )(wav)
 
-        logmel = torchaudio.transforms.AmplitudeToDB()(mel_spectrogram)
+#         logmel = torchaudio.transforms.AmplitudeToDB()(mel_spectrogram)
 
-        return logmel
+#         return logmel
 
