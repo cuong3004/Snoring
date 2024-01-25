@@ -5,6 +5,16 @@ from torchvision.models import mobilenet_v2
 import torch
 import torch.nn as nn  
 import torch.optim as optim
+import numpy as np
+from sklearn.metrics import classification_report, f1_score, accuracy_score
+
+
+def flat_accuracy(preds, labels):
+    pred_flat = np.argmax(preds, axis=1).flatten()
+    labels_flat = labels.flatten()
+    F1_score = f1_score(pred_flat, labels_flat, average='macro')
+
+    return accuracy_score(pred_flat, labels_flat), F1_score
 
 
 class LitClassification(pl.LightningModule):
@@ -73,12 +83,14 @@ class LitClassification(pl.LightningModule):
         return optimizer
     
     def share_batch(self, batch, state):
-        inputs, targets = batch
+
+        inputs, targets = batch['data'], batch['label']
         
         outputs = self.model(inputs)
         
         loss = torch.nn.functional.cross_entropy(outputs, targets)
         
+        acc_batch, f1_batch = flat_accuracy(outputs, targets)
         
         
 #         print(labels)
@@ -147,13 +159,13 @@ class LitClassification(pl.LightningModule):
         
 #         loss = akd_loss + cls_loss + att_loss
         
-#         if state == "train":
-#             acc = self.acc(student_logits, labels)
-#             self.log(f'{state}_acc', acc, on_step=False, on_epoch=True, prog_bar=True)
-#         elif state == "valid":
-#             pred = student_logits.argmax(dim=1)
-#             self.all_preds.append(pred.to('cpu'))
-#             self.all_labels.append(labels.to('cpu'))
+        if state == "train":
+            # acc = self.acc(student_logits, labels)
+            self.log(f'{state}_acc', acc_batch, on_step=False, on_epoch=True, prog_bar=True)
+        # elif state == "valid":
+        #     pred = student_logits.argmax(dim=1)
+        #     self.all_preds.append(pred.to('cpu'))
+        #     self.all_labels.append(labels.to('cpu'))
 
 #         self.log(f"{state}_loss", loss, on_step=False, on_epoch=True)
 #         self.log(f"{state}_rep_loss", rep_loss, on_step=False, on_epoch=True)
@@ -164,8 +176,8 @@ class LitClassification(pl.LightningModule):
     
     def on_validation_epoch_end(self):
 
-        all_preds = torch.cat(self.all_preds,dim=0)
-        all_labels = torch.cat(self.all_labels,dim=0)
+        # all_preds = torch.cat(self.all_preds,dim=0)
+        # all_labels = torch.cat(self.all_labels,dim=0)
         # print(all_preds.shape)
         # acc = accuracy(all_preds, all_labels, task="multiclass", num_classes=10)
         # pre = precision(all_preds, all_labels, task="multiclass", average=average, num_classes=10)

@@ -1,4 +1,4 @@
-lightly
+lightning
 gdown
 unzip
 wandb
