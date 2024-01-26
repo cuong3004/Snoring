@@ -160,14 +160,15 @@ class LitClassification(pl.LightningModule):
 #         loss = akd_loss + cls_loss + att_loss
         
         if state == "valid":
-            acc_batch, f1_batch = flat_accuracy(outputs, targets)
+            
+            acc_batch, f1_batch = flat_accuracy(outputs.cpu(), targets)
         
             # acc = self.acc(student_logits, labels)
             self.log(f'{state}_acc', acc_batch, on_step=False, on_epoch=True, prog_bar=True)
         # elif state == "valid":
-        #     pred = student_logits.argmax(dim=1)
-        #     self.all_preds.append(pred.to('cpu'))
-        #     self.all_labels.append(labels.to('cpu'))
+            # pred = student_logits.argmax(dim=1)
+            # self.all_preds.append(pred.to('cpu'))
+            # self.all_labels.append(labels.to('cpu'))
 
         self.log(f"{state}_loss", loss, on_step=False, on_epoch=True)
 #         self.log(f"{state}_rep_loss", rep_loss, on_step=False, on_epoch=True)
