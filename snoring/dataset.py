@@ -21,7 +21,7 @@ class CusttomDataUrban:
         return len(self.df)
 
     def __getitem__(self, idx):
-        path = "preprocessing_data/fold" + str(self.df["fold"].iloc[idx]) + "/" + self.df["slice_file_name"].iloc[idx]
+        path = "/kaggle/input/urbansound8k/fold" + str(self.df["fold"].iloc[idx]) + "/" + self.df["slice_file_name"].iloc[idx]
         label = self.df["classID"].iloc[idx]
 
         wav, sr = torchaudio.load(path)
