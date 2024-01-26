@@ -18,12 +18,12 @@ def flat_accuracy(preds, labels):
 
 
 class LitClassification(pl.LightningModule):
-    def __init__(self, data_module, df_train, df_test):
+    def __init__(self):
         super().__init__()
         
-        self.data_module = data_module
-        self.df_train = df_train
-        self.df_test = df_test
+        # self.data_module = data_module
+        # self.df_train = df_train
+        # self.df_test = df_test
 
         # config = Wav2Vec2Config.from_json_file("config.json")
         self.model = mobilenet_v2(pretrained=True)
@@ -53,17 +53,17 @@ class LitClassification(pl.LightningModule):
         self.all_labels = []
     
     
-    def train_dataloader(self):
-        datacry = self.data_module(self.df_train)
-        return DataLoader(datacry, batch_size=32, num_workers=2)
+    # def train_dataloader(self):
+    #     datacry = self.data_module(self.df_train)
+    #     return DataLoader(datacry, batch_size=32, num_workers=2)
     
-    def val_dataloader(self):
-        datacry = self.data_module(self.df_test)
-        return DataLoader(datacry, batch_size=16, num_workers=2)
+    # def val_dataloader(self):
+    #     datacry = self.data_module(self.df_test)
+    #     return DataLoader(datacry, batch_size=16, num_workers=2)
     
-    def test_dataloader(self):
-        datacry = self.data_module(self.df_test)
-        return DataLoader(datacry, batch_size=16, num_workers=2)
+    # def test_dataloader(self):
+    #     datacry = self.data_module(self.df_test)
+    #     return DataLoader(datacry, batch_size=16, num_workers=2)
     def configure_optimizers(self):
         optimizer = optim.Adam(self.model.parameters(), lr=1e-4)
         # optimizer = AdamW(list(self.student_model.parameters())+
