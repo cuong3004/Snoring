@@ -161,7 +161,7 @@ class LitClassification(pl.LightningModule):
         
         if state == "valid":
             
-            acc_batch, f1_batch = flat_accuracy(outputs.cpu(), targets)
+            acc_batch, f1_batch = flat_accuracy(outputs.cpu(), targets.cpu())
         
             # acc = self.acc(student_logits, labels)
             self.log(f'{state}_acc', acc_batch, on_step=False, on_epoch=True, prog_bar=True)
