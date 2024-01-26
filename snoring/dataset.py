@@ -34,8 +34,8 @@ class CusttomDataUrban:
         wav = torch.mean(wav, dim=0, keepdim=True)
         # pad 4 second
         tempData = torch.zeros([1, sr*4])
-        if audio_mono.numel() < sr*4: # if sample_rate < 160000
-            tempData[:, :wav.numel()] = audio_mono
+        if wav.numel() < sr*4: # if sample_rate < 160000
+            tempData[:, :wav.numel()] = wav
         else:
             tempData = wav[:, :sr*4] # else sample_rate 160000
         wav=tempData

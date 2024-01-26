@@ -46,8 +46,7 @@ valid_dataloader =  DataLoader(data_valid, batch_size=32, num_workers=2)
 
 tesst_dataloader =  DataLoader(data_valid, batch_size=32, num_workers=2)
 
-
-# transform = Tra
+next(iter(train_dataloader))
 
 
 model_lit = LitClassification()
