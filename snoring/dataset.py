@@ -8,6 +8,36 @@ from torchaudio.transforms import Spectrogram, Resample, MelSpectrogram, MelScal
 from torchaudio.transforms import TimeStretch, FrequencyMasking, TimeMasking
 
 
+class CusttomDataUrban:
+    def __init__(self, df, transforms=None):
+        self.df = df
+        self.transforms = transforms
+        self.pipeline = MyPipeline()
+
+        label_list = sorted(list(set(df.iloc[:,-2])))
+        self.label_dir = {k:v for v, k in enumerate(label_list)}
+
+    def __len__(self):
+        return len(self.df)
+
+    def __getitem__(self, idx):
+        path = "preprocessing_data/fold" + str(self.df["fold"].iloc[idx]) + "/" + self.df["slice_file_name"].iloc[idx]
+        label = self.df["classID"].iloc[idx]
+
+        wav, sr = torchaudio.load(path)
+
+        target_sr = 44100  # Set your target sample rate here
+        if sr != target_sr:
+            wav = torchaudio.transforms.Resample(sr, target_sr)(wav)
+            sr = target_sr
+
+        wav = torch.mean(wav, dim=0, keepdim=True)
+        # return {"data": wav, "label": label}
+        
+        features = self.pipeline(wav)
+        return {"data": features, "label": label}
+    
+
 class CusttomDataSnor:
     def __init__(self, df, transforms=None):
         self.df = df
@@ -39,33 +69,33 @@ class CusttomDataSnor:
         # return sample
     
 
-class ToSpectrograms(object):
-    def __init__(self, n_fft, hop_length, n_mels):
-        self.n_fft = n_fft
-        self.hop_length = hop_length
-        self.n_mels = n_mels
+# class ToSpectrograms(object):
+#     def __init__(self, n_fft, hop_length, n_mels):
+#         self.n_fft = n_fft
+#         self.hop_length = hop_length
+#         self.n_mels = n_mels
         
-    def __call__(self, sample):
+#     def __call__(self, sample):
         
-        waveform, sr, label = sample['data'], sample['sr'], sample['label']
+#         waveform, sr, label = sample['data'], sample['sr'], sample['label']
         
-        mel_spectrogram = T.MelSpectrogram(
-            sample_rate=sr,
-            n_fft=self.n_fft,
-            win_length=None,
-            hop_length=self.hop_length,
-            center=True,
-            pad_mode="reflect",
-            power=2.0,
-            norm="slaney",
-            n_mels=self.n_mels,
-            mel_scale="htk",
-        )
+#         mel_spectrogram = T.MelSpectrogram(
+#             sample_rate=sr,
+#             n_fft=self.n_fft,
+#             win_length=None,
+#             hop_length=self.hop_length,
+#             center=True,
+#             pad_mode="reflect",
+#             power=2.0,
+#             norm="slaney",
+#             n_mels=self.n_mels,
+#             mel_scale="htk",
+#         )
         
-        melspec = mel_spectrogram(waveform)
+#         melspec = mel_spectrogram(waveform)
         
-        sample_new = {'data': melspec, 'label': label}
-        return sample_new
+#         sample_new = {'data': melspec, 'label': label}
+#         return sample_new
     
     
 class MyPipeline(torch.nn.Module):

@@ -9,61 +9,48 @@ import matplotlib.pyplot as plt
 import librosa.display
 from lit import LitClassification
 import lightning as pl
+import numpy as np   
+from dataset import CusttomDataUrban
+from torch.utils.data import DataLoader, WeightedRandomSampler
 # %%
 
-df = pd.DataFrame()
-df["Link"] = glob("Snoring Dataset/*/*.wav")
-df["Label"] = df["Link"].apply(lambda x: x.split("/")[-2])
+df = pd.read_csv("/kaggle/input/urbansound8k/UrbanSound8K.csv")
 
 df_train, df_test = train_test_split(df,
                         random_state=104,
                         test_size=0.2,
                         shuffle=True)
 
+def get_class_distribution(dataset_obj):
+    count_array = np.array([len(np.where(dataset_obj == t)[0]) for t in np.unique(dataset_obj)])
+    return count_array
+
+target_list = df_train['classID'].values
+
+class_count = np.array([i for i in get_class_distribution(df_train['classID'].values)])
+weight = 1. / class_count
+samples_weight = np.array([weight[t] for t in target_list])
+samples_weight = torch.from_numpy(samples_weight)
+samples_weigth = samples_weight.double()
+
+weighted_sampler = WeightedRandomSampler ( 
+    weights = samples_weigth, 
+    num_samples = len (samples_weigth), 
+)
+
+data_train = CusttomDataUrban(df_train)
+train_dataloader =  DataLoader(data_train, batch_size=32, num_workers=2, sampler = weighted_sampler)
+
+data_valid = CusttomDataUrban(df_test)
+valid_dataloader =  DataLoader(data_valid, batch_size=32, num_workers=2, sampler = weighted_sampler)
+
+tesst_dataloader =  DataLoader(data_valid, batch_size=32, num_workers=2, sampler = weighted_sampler)
+
+
 # transform = Tra
 
 
-model_lit = LitClassification(CusttomDataSnor,df_train,df_test)
+model_lit = LitClassification()
 
 trainer = pl.Trainer(limit_train_batches=100)
-trainer.fit(model_lit)
-
-# data = CusttomDataSnor(df_train)
-
-
-
-
-
-
-
-# %%
-# data[0]['data'].shape
-
-# %%
-# import torchaudio.transforms as T
-# mel_spectrogram = T.MelSpectrogram(
-#     sample_rate=44100,
-#     n_fft=1024,
-#     win_length=None,
-#     hop_length=512,
-#     center=True,
-#     pad_mode="reflect",
-#     power=2.0,
-#     norm='slaney',
-#     onesided=True,
-#     n_mels=128,
-#     mel_scale="htk",
-# )
-
-# melspec = mel_spectrogram(data[11]["data"][0])
-# plot_spectrogram(
-#     melspec, title="MelSpectrogram - torchaudio", ylabel='mel freq')
-
-# %%
-
-# librosa.display.specshow(data[0]['data'][0].numpy())
-# # plt.imshow(data[0]['data'][0])
-# plt.savefig("okela.png")
-
-# # %% 
-# plt.hist(melspec.reshape(-1))
+trainer.fit(model_lit, train_dataloader, valid_dataloader)
