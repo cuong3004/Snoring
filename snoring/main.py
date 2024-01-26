@@ -48,8 +48,16 @@ tesst_dataloader =  DataLoader(data_valid, batch_size=32, num_workers=2)
 
 next(iter(train_dataloader))
 
+# checkpoint_callback = pl.callbacks.ModelCheckpoint(monitor="val_acc", mode='max')
+
+from pytorch_lightning.loggers import WandbLogger
+
+wandb_logger = WandbLogger(project="snoring", name="urban8k")
+
+
+
 
 model_lit = LitClassification()
 
-trainer = pl.Trainer(limit_train_batches=100)
+trainer = pl.Trainer(limit_train_batches=100, logger=wandb_logger)
 trainer.fit(model_lit, train_dataloader, valid_dataloader)
