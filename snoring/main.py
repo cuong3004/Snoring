@@ -42,9 +42,9 @@ data_train = CusttomDataUrban(df_train)
 train_dataloader =  DataLoader(data_train, batch_size=32, num_workers=2, sampler = weighted_sampler)
 
 data_valid = CusttomDataUrban(df_test)
-valid_dataloader =  DataLoader(data_valid, batch_size=32, num_workers=2, sampler = weighted_sampler)
+valid_dataloader =  DataLoader(data_valid, batch_size=32, num_workers=2)
 
-tesst_dataloader =  DataLoader(data_valid, batch_size=32, num_workers=2, sampler = weighted_sampler)
+tesst_dataloader =  DataLoader(data_valid, batch_size=32, num_workers=2)
 
 
 # transform = Tra
