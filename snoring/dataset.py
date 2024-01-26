@@ -57,10 +57,19 @@ class CusttomDataSnor:
             wav = torchaudio.transforms.Resample(sr, target_sr)(wav)
             sr = target_sr
 
-        wav = torch.mean(wav, dim=0, keepdim=True)
+        # convert to mono
+        audio_mono = torch.mean(wav, dim=0, keepdim=True)
+        
+        # pad 4 second
+        tempData = torch.zeros([1, sr*4])
+        if audio_mono.numel() < sr*4: # if sample_rate < 160000
+            tempData[:, :audio_mono.numel()] = audio_mono
+        else:
+            tempData = audio_mono[:, :sr*4] # else sample_rate 160000
+        audio_mono=tempData
         # return {"data": wav, "label": label}
         
-        features = self.pipeline(wav)
+        features = self.pipeline(audio_mono)
         return {"data": features, "label": label}
         
         # sample = {'data': wav, "sr":sr, 'label': label}
