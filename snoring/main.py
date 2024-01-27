@@ -69,5 +69,5 @@ wandb_logger = WandbLogger(project="snoring", name=name)
 
 model_lit = LitClassification()
 
-trainer = pl.Trainer(max_epochs=15, logger=wandb_logger, use_ipex=True, precision='bf16')
+trainer = pl.Trainer(max_epochs=15, logger=wandb_logger, precision='bf16')
 trainer.fit(model_lit, train_dataloader, valid_dataloader)
