@@ -49,13 +49,16 @@ class TFModule(nn.Module):
         x_pess = x[:,1:2]
         
         # print(x_har.shape)
+        print("x_har", x_har.shape)
+        print("x_pess", x_pess.shape)
         
         f_score = self.f_module(x_har)
+        print("f_score", f_score.shape)
         
         # print("f_score", f_score.shape)
         
         t_score = self.t_module(x_pess)
-        
+        print("t_score", t_score.shape)
         x_har = x_har * f_score 
         x_pess = x_pess * t_score
         
@@ -163,7 +166,7 @@ class LitClassification(pl.LightningModule):
         
 # %%
 if __name__ == "__main__":
-    x = torch.ones([3, 128, 87])[None]
+    x = torch.ones([5,3, 128, 87])
     litmodel = LitClassification()  #TFModule()
     
     
