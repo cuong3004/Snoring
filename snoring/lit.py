@@ -23,7 +23,7 @@ class TFModule(nn.Module):
         
         self.f_module =  nn.Sequential(
             nn.Conv2d(1, 8, kernel_size=(1, 3), stride=(1, 2), bias=False),
-            nn.ReLU()
+            nn.ReLU(),
             nn.Conv2d(8, 16, kernel_size=(1, 3), stride=(1, 2), bias=False),
             nn.ReLU(),
             nn.Conv2d(16, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
