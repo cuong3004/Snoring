@@ -25,7 +25,7 @@ class LitClassification(pl.LightningModule):
         self.model = mobilenet_v2(pretrained=True)
         self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, 10)
         
-        self.model.features[0][0] = nn.Conv2d(1, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        # self.model.features[0][0] = nn.Conv2d(1, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
 
         self.all_preds = []
         self.all_labels = []

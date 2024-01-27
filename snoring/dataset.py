@@ -6,7 +6,8 @@ import torchaudio.transforms as T
 import torch
 from torchaudio.transforms import Spectrogram, Resample, MelSpectrogram, MelScale, AmplitudeToDB
 from torchaudio.transforms import TimeStretch, FrequencyMasking, TimeMasking
-
+import numpy as np 
+import librosa
 
 class CusttomDataUrban:
     def __init__(self, df, transforms=None):
@@ -68,12 +69,12 @@ class CusttomDataSnor:
         audio_mono = torch.mean(wav, dim=0, keepdim=True)
         
         # pad 4 second
-        tempData = torch.zeros([1, sr*4])
-        if audio_mono.numel() < sr*4: # if sample_rate < 160000
-            tempData[:, :audio_mono.numel()] = audio_mono
-        else:
-            tempData = audio_mono[:, :sr*4] # else sample_rate 160000
-        audio_mono=tempData
+        # tempData = torch.zeros([1, sr*4])
+        # if audio_mono.numel() < sr*4: # if sample_rate < 160000
+        #     tempData[:, :audio_mono.numel()] = audio_mono
+        # else:
+        #     tempData = audio_mono[:, :sr*4] # else sample_rate 160000
+        # audio_mono=tempData
         # return {"data": wav, "label": label}
         
         features = self.pipeline(audio_mono)
@@ -114,7 +115,22 @@ class MyPipeline(torch.nn.Module):
 
         # Apply SpecAugment
         # spec = self.spec_aug(spec)
+        
+        D_harmonic, D_percussive = librosa.decompose.hpss(mel_spec)
+        
+        
+        
 
-        log_mel = self.log_scale(mel_spec)
+        log_mel = librosa.power_to_db(mel_spec, ref=np.max)
+        log_D_harmonic = librosa.power_to_db(D_harmonic, ref=np.max)
+        log_D_percussive = librosa.power_to_db(D_percussive, ref=np.max)
+        
+        
+        
+        
+        # log_mel = self.log_scale(mel_spec)
+        log_mel = torch.from_numpy(log_mel)
+        log_D_harmonic = torch.from_numpy(log_D_harmonic)
+        log_D_percussive = torch.from_numpy(log_D_percussive)
 
-        return log_mel   
+        return torch.concat((log_mel, log_D_harmonic,log_D_percussive), 0)   
