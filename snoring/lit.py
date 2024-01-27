@@ -23,9 +23,13 @@ class TFModule(nn.Module):
         
         self.f_module =  nn.Sequential(
             nn.Conv2d(1, 8, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            nn.ReLU()
             nn.Conv2d(8, 16, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            nn.ReLU()
             nn.Conv2d(16, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            nn.ReLU()
             nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            nn.ReLU()
             nn.AdaptiveMaxPool2d((128, 1)),
             nn.Conv2d(32, 1, kernel_size=(1, 1), bias=False),
             nn.Sigmoid()
@@ -35,9 +39,13 @@ class TFModule(nn.Module):
         
         self.t_module =  nn.Sequential(
             nn.Conv2d(1, 8, kernel_size=(5, 1), stride=(2, 1), bias=False),
+            nn.ReLU()
             nn.Conv2d(8, 16, kernel_size=(5, 1), stride=(2, 1), bias=False),
+            nn.ReLU()
             nn.Conv2d(16, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
+            nn.ReLU()
             nn.Conv2d(32, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
+            nn.ReLU()
             nn.AdaptiveMaxPool2d((1, 345)),
             nn.Conv2d(32, 1, kernel_size=(1, 1), bias=False),
             nn.Sigmoid()
@@ -61,8 +69,8 @@ class TFModule(nn.Module):
         
         t_score = self.t_module(x_pess)
         # print("t_score", t_score.shape)
-        x_har = x_har * f_score 
-        x_pess = x_pess * t_score
+        x_har = x_har + x_har * f_score 
+        x_pess = x_pess + x_pess * t_score
         
         # print(x_har.shape)
         # x = x*torch.stack(f_score, t_score)
