@@ -37,7 +37,7 @@ class TFModule(nn.Module):
             nn.Conv2d(8, 16, kernel_size=(5, 1), stride=(2, 1), bias=False),
             nn.Conv2d(16, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
             nn.Conv2d(32, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
-            nn.AdaptiveMaxPool2d((1, 87)),
+            nn.AdaptiveMaxPool2d((1, 345)),
             nn.Conv2d(32, 1, kernel_size=(1, 1), bias=False),
             # nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
             # nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False)
@@ -166,7 +166,7 @@ class LitClassification(pl.LightningModule):
         
 # %%
 if __name__ == "__main__":
-    x = torch.ones([5,3, 128, 87])
+    x = torch.ones([5,3, 128, 345]) #87
     litmodel = LitClassification()  #TFModule()
     
     
