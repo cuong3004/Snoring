@@ -28,6 +28,7 @@ class TFModule(nn.Module):
             nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
             nn.AdaptiveMaxPool2d((128, 1)),
             nn.Conv2d(32, 1, kernel_size=(1, 1), bias=False),
+            nn.Sigmoid()
             # nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
             # nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False)
         )
@@ -39,6 +40,7 @@ class TFModule(nn.Module):
             nn.Conv2d(32, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
             nn.AdaptiveMaxPool2d((1, 345)),
             nn.Conv2d(32, 1, kernel_size=(1, 1), bias=False),
+            nn.Sigmoid()
             # nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
             # nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False)
         )
@@ -49,16 +51,16 @@ class TFModule(nn.Module):
         x_pess = x[:,1:2]
         
         # print(x_har.shape)
-        print("x_har", x_har.shape)
-        print("x_pess", x_pess.shape)
+        # print("x_har", x_har.shape)
+        # print("x_pess", x_pess.shape)
         
         f_score = self.f_module(x_har)
-        print("f_score", f_score.shape)
+        # print("f_score", f_score.shape)
         
         # print("f_score", f_score.shape)
         
         t_score = self.t_module(x_pess)
-        print("t_score", t_score.shape)
+        # print("t_score", t_score.shape)
         x_har = x_har * f_score 
         x_pess = x_pess * t_score
         
