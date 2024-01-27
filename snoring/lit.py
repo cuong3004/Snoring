@@ -10,6 +10,19 @@ from sklearn.metrics import classification_report, f1_score, accuracy_score
 from torchmetrics.functional import accuracy, precision, recall, f1_score
 average = 'macro'
 
+class CNNBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding):
+        super(CNNBlock, self).__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
+        self.batch_norm = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.batch_norm(x)
+        x = self.relu(x)
+        return x
+    
 def flat_accuracy(preds, labels):
     pred_flat = np.argmax(preds, axis=1).flatten()
     labels_flat = labels.flatten()
@@ -22,14 +35,10 @@ class TFModule(nn.Module):
         super().__init__(*args, **kwargs)
         
         self.f_module =  nn.Sequential(
-            nn.Conv2d(1, 8, kernel_size=(1, 3), stride=(1, 2), bias=False),
-            nn.ReLU(),
-            nn.Conv2d(8, 16, kernel_size=(1, 3), stride=(1, 2), bias=False),
-            nn.ReLU(),
-            nn.Conv2d(16, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
-            nn.ReLU(),
-            nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
-            nn.ReLU(),
+            CNNBlock(1, 8, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            CNNBlock(8, 16, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            CNNBlock(16, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            CNNBlock(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
             nn.AdaptiveMaxPool2d((128, 1)),
             nn.Conv2d(32, 1, kernel_size=(1, 1), bias=False),
             nn.Sigmoid()
@@ -38,14 +47,10 @@ class TFModule(nn.Module):
         )
         
         self.t_module =  nn.Sequential(
-            nn.Conv2d(1, 8, kernel_size=(5, 1), stride=(2, 1), bias=False),
-            nn.ReLU(),
-            nn.Conv2d(8, 16, kernel_size=(5, 1), stride=(2, 1), bias=False),
-            nn.ReLU(),
-            nn.Conv2d(16, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
-            nn.ReLU(),
-            nn.Conv2d(32, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
-            nn.ReLU(),
+            CNNBlock(1, 8, kernel_size=(5, 1), stride=(2, 1), bias=False),
+            CNNBlock(8, 16, kernel_size=(5, 1), stride=(2, 1), bias=False),
+            CNNBlock(16, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
+            CNNBlock(32, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
             nn.AdaptiveMaxPool2d((1, 345)),
             nn.Conv2d(32, 1, kernel_size=(1, 1), bias=False),
             nn.Sigmoid()

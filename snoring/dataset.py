@@ -133,4 +133,25 @@ class MyPipeline(torch.nn.Module):
         log_D_harmonic = torch.from_numpy(log_D_harmonic)
         log_D_percussive = torch.from_numpy(log_D_percussive)
 
-        return torch.concat((log_mel, log_D_harmonic,log_D_percussive), 0)   
+        return min_max_normalize(torch.concat((log_mel, log_D_harmonic,log_D_percussive), 0))   
+
+def min_max_normalize(data, epsilon=1e-7):
+    """
+    Chuẩn hóa Min-Max với epsilon
+    Args:
+    - data: Mảng dữ liệu cần chuẩn hóa
+    - epsilon: Giá trị epsilon để tránh chia cho 0
+    Returns:
+    - normalized_data: Mảng đã được chuẩn hóa
+    """
+    min_val = -80.0
+    max_val = 0.0
+    normalized_data = (data - min_val) / (max_val - min_val + epsilon)
+    return normalized_data
+
+# Example usage:
+# data_to_normalize = [2, 5, 10, 7, 3]
+# normalized_data = min_max_normalize(data_to_normalize)
+
+# print("Original data:", data_to_normalize)
+# print("Normalized data:", normalized_data)

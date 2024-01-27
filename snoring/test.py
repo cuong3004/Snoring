@@ -30,3 +30,5 @@ plt.savefig("okela.png")
 librosa.display.specshow(data[0]['data'][2].numpy(), y_axis='mel')
 plt.savefig("okela.png")
 # %%
+
+librosa.display.specshow(0.5*(data[0]['data'][2].numpy()+data[0]['data'][1].numpy()), y_axis='mel')
