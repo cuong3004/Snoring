@@ -25,11 +25,11 @@ class TFModule(nn.Module):
             nn.Conv2d(1, 8, kernel_size=(1, 3), stride=(1, 2), bias=False),
             nn.ReLU()
             nn.Conv2d(8, 16, kernel_size=(1, 3), stride=(1, 2), bias=False),
-            nn.ReLU()
+            nn.ReLU(),
             nn.Conv2d(16, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
-            nn.ReLU()
+            nn.ReLU(),
             nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
-            nn.ReLU()
+            nn.ReLU(),
             nn.AdaptiveMaxPool2d((128, 1)),
             nn.Conv2d(32, 1, kernel_size=(1, 1), bias=False),
             nn.Sigmoid()
@@ -39,13 +39,13 @@ class TFModule(nn.Module):
         
         self.t_module =  nn.Sequential(
             nn.Conv2d(1, 8, kernel_size=(5, 1), stride=(2, 1), bias=False),
-            nn.ReLU()
+            nn.ReLU(),
             nn.Conv2d(8, 16, kernel_size=(5, 1), stride=(2, 1), bias=False),
-            nn.ReLU()
+            nn.ReLU(),
             nn.Conv2d(16, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
-            nn.ReLU()
+            nn.ReLU(),
             nn.Conv2d(32, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
-            nn.ReLU()
+            nn.ReLU(),
             nn.AdaptiveMaxPool2d((1, 345)),
             nn.Conv2d(32, 1, kernel_size=(1, 1), bias=False),
             nn.Sigmoid()
