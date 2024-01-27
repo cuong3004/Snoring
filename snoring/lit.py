@@ -33,26 +33,26 @@ def flat_accuracy(preds, labels):
 class TFModule(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        
+        orgin = 2
         self.f_module =  nn.Sequential(
-            CNNBlock(1, 8, kernel_size=(1, 3), stride=(1, 2),  bias=False),
+            CNNBlock(1, 4, kernel_size=(1, 3), stride=(1, 2),  bias=False),
+            CNNBlock(4, 8, kernel_size=(1, 3), stride=(1, 2), bias=False),
             CNNBlock(8, 16, kernel_size=(1, 3), stride=(1, 2), bias=False),
-            CNNBlock(16, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
-            CNNBlock(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            CNNBlock(16, 16, kernel_size=(1, 3), stride=(1, 2), bias=False),
             nn.AdaptiveMaxPool2d((128, 1)),
-            nn.Conv2d(32, 1, kernel_size=(1, 1), bias=False),
+            nn.Conv2d(16, 1, kernel_size=(1, 1), bias=False),
             nn.Sigmoid()
             # nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
             # nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False)
         )
         
         self.t_module =  nn.Sequential(
-            CNNBlock(1, 8, kernel_size=(5, 1), stride=(2, 1), bias=False),
+            CNNBlock(1, 4, kernel_size=(5, 1), stride=(2, 1), bias=False),
+            CNNBlock(4, 8, kernel_size=(5, 1), stride=(2, 1), bias=False),
             CNNBlock(8, 16, kernel_size=(5, 1), stride=(2, 1), bias=False),
-            CNNBlock(16, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
-            CNNBlock(32, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
+            CNNBlock(16, 16, kernel_size=(5, 1), stride=(2, 1), bias=False),
             nn.AdaptiveMaxPool2d((1, 345)),
-            nn.Conv2d(32, 1, kernel_size=(1, 1), bias=False),
+            nn.Conv2d(16, 1, kernel_size=(1, 1), bias=False),
             nn.Sigmoid()
             # nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
             # nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False)
