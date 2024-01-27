@@ -11,9 +11,9 @@ from torchmetrics.functional import accuracy, precision, recall, f1_score
 average = 'macro'
 
 class CNNBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, bias):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding=(0,0), bias=False):
         super(CNNBlock, self).__init__()
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, bias=bias)
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding=padding, bias=bias)
         self.batch_norm = nn.BatchNorm2d(out_channels)
         self.relu = nn.ReLU()
 
@@ -35,7 +35,7 @@ class TFModule(nn.Module):
         super().__init__(*args, **kwargs)
         
         self.f_module =  nn.Sequential(
-            CNNBlock(1, 8, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            CNNBlock(1, 8, kernel_size=(1, 3), stride=(1, 2),  bias=False),
             CNNBlock(8, 16, kernel_size=(1, 3), stride=(1, 2), bias=False),
             CNNBlock(16, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
             CNNBlock(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
