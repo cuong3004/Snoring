@@ -21,8 +21,51 @@ class TFModule(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         
-        # f_module = 
-        pass
+        self.f_module =  nn.Sequential(
+            nn.Conv2d(1, 8, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            nn.Conv2d(8, 16, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            nn.Conv2d(16, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            nn.AdaptiveMaxPool2d((128, 1)),
+            nn.Conv2d(32, 1, kernel_size=(1, 1), bias=False),
+            # nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            # nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False)
+        )
+        
+        self.t_module =  nn.Sequential(
+            nn.Conv2d(1, 8, kernel_size=(5, 1), stride=(2, 1), bias=False),
+            nn.Conv2d(8, 16, kernel_size=(5, 1), stride=(2, 1), bias=False),
+            nn.Conv2d(16, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
+            nn.Conv2d(32, 32, kernel_size=(5, 1), stride=(2, 1), bias=False),
+            nn.AdaptiveMaxPool2d((1, 87)),
+            nn.Conv2d(32, 1, kernel_size=(1, 1), bias=False),
+            # nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False),
+            # nn.Conv2d(32, 32, kernel_size=(1, 3), stride=(1, 2), bias=False)
+        )
+    
+    def forward(self, x):
+        
+        x_har = x[:,0:1]
+        x_pess = x[:,1:2]
+        
+        # print(x_har.shape)
+        
+        f_score = self.f_module(x_har)
+        
+        # print("f_score", f_score.shape)
+        
+        t_score = self.t_module(x_pess)
+        
+        x_har = x_har * f_score 
+        x_pess = x_pess * t_score
+        
+        # print(x_har.shape)
+        # x = x*torch.stack(f_score, t_score)
+        
+        
+        
+                
+        return torch.concat((x_har, x_pess),1)
 
 class LitClassification(pl.LightningModule):
     def __init__(self):
@@ -34,12 +77,28 @@ class LitClassification(pl.LightningModule):
         
         self.model.features[0][0] = nn.Conv2d(2, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
 
+        self.tf_module = TFModule()
+        
         self.all_preds = []
         self.all_labels = []
     
+    def forward(self, x):
+        # print()
+        x = x[:,1:]
+        # print(x.shape)
+        x = self.tf_module(x)
+
+        # print(x.shape)
+        x = self.model(x)
+        
+        return x
+        
+        
+        # forward
+    
 
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.model.parameters(), lr=1e-4)
+        optimizer = optim.Adam(self.parameters(), lr=1e-4)
 
         return optimizer
     
@@ -47,7 +106,7 @@ class LitClassification(pl.LightningModule):
 
         inputs, targets = batch['data'], batch['label']
         
-        outputs = self.model(inputs[:,1:])
+        outputs = self(inputs)
         
         loss = torch.nn.functional.cross_entropy(outputs, targets)
         
@@ -104,13 +163,13 @@ class LitClassification(pl.LightningModule):
         
 # %%
 if __name__ == "__main__":
-    x = torch.ones([1, 128, 87])[None]
-    litmodel = LitClassification(None,None,None)
+    x = torch.ones([3, 128, 87])[None]
+    litmodel = LitClassification()  #TFModule()
     
     
-    y = litmodel.model.features(x)
-    
+    y = litmodel(x)
     
     print(y.shape)
+    # print(y[0].shape, y[1].shape)
     
 # %%
