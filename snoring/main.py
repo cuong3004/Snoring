@@ -14,6 +14,16 @@ from dataset import CusttomDataUrban
 from torch.utils.data import DataLoader, WeightedRandomSampler
 # %%
 
+import argparse
+parser = argparse.ArgumentParser(description='Mô tả về chương trình của bạn')
+parser.add_argument('name', type=str, default="", help='Mô tả cho arg1')
+
+args = parser.parse_args()
+
+name = args.name
+
+
+
 df = pd.read_csv("/kaggle/input/urbansound8k/UrbanSound8K.csv")
 
 df_train, df_test = train_test_split(df,
@@ -52,12 +62,12 @@ next(iter(train_dataloader))
 
 from pytorch_lightning.loggers import WandbLogger
 
-wandb_logger = WandbLogger(project="snoring", name="urban8k")
+wandb_logger = WandbLogger(project="snoring", name=name)
 
 
 
 
 model_lit = LitClassification()
 
-trainer = pl.Trainer(limit_train_batches=100, logger=wandb_logger)
+trainer = pl.Trainer(max_epochs=15, logger=wandb_logger)
 trainer.fit(model_lit, train_dataloader, valid_dataloader)

@@ -17,6 +17,12 @@ def flat_accuracy(preds, labels):
 
     return accuracy_score(pred_flat, labels_flat), F1_score
 
+class TFModule(nn.Module):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        
+        # f_module = 
+        pass
 
 class LitClassification(pl.LightningModule):
     def __init__(self):
@@ -25,7 +31,8 @@ class LitClassification(pl.LightningModule):
         self.model = mobilenet_v2(pretrained=True)
         self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, 10)
         
-        # self.model.features[0][0] = nn.Conv2d(1, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        
+        self.model.features[0][0] = nn.Conv2d(2, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
 
         self.all_preds = []
         self.all_labels = []
@@ -40,7 +47,7 @@ class LitClassification(pl.LightningModule):
 
         inputs, targets = batch['data'], batch['label']
         
-        outputs = self.model(inputs)
+        outputs = self.model(inputs[:,1:])
         
         loss = torch.nn.functional.cross_entropy(outputs, targets)
         
