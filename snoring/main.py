@@ -16,7 +16,7 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 
 import argparse
 parser = argparse.ArgumentParser(description='Mô tả về chương trình của bạn')
-parser.add_argument('name', type=str, default="", help='Mô tả cho arg1')
+parser.add_argument('--name', type=str, default="", help='Mô tả cho arg1')
 
 args = parser.parse_args()
 
