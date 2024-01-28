@@ -95,7 +95,7 @@ class LitClassification(pl.LightningModule):
         
         self.model.features[0][0] = nn.Conv2d(2, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
 
-        self.tf_module = TFModule()
+        # self.tf_module = TFModule()
         
         self.all_preds = []
         self.all_labels = []
@@ -104,7 +104,7 @@ class LitClassification(pl.LightningModule):
         # print()
         x = x[:,1:]
         # print(x.shape)
-        x = self.tf_module(x)
+        # x = self.tf_module(x)
 
         # print(x.shape)
         x = self.model(x)
