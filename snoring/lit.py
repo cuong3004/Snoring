@@ -154,7 +154,8 @@ class LitClassification(pl.LightningModule):
         # x = self.tf_module(x)
 
         # print(x.shape)
-        x = self.model(x)[0]
+        # x = self.model(x)[0]
+        x = self.model(x)
         
         return x
         
