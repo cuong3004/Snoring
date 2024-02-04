@@ -43,8 +43,12 @@ def get_mobilevitv3():
     state_dict = torch.load("checkpoint_ema_best.pt", map_location=torch.device('cpu'))
     model.load_state_dict(state_dict)
     
-    model.classifier.fc = nn.Linear(in_features=512, out_features=10, bias=True)
-
+    from cvnets.layers.conv_layer import ConvLayer
+    from cvnets.layers.linear_layer import LinearLayer
+    
+    
+    model.classifier.fc = LinearLayer(in_features=512, out_features=10, bias=True)
+    model.conv_1 = ConvLayer(opts, 1, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
 
     return model
 
@@ -225,24 +229,25 @@ class LitClassification(pl.LightningModule):
 # %%
 if __name__ == "__main__":
     x = torch.ones([2,3, 128, 345]) #87
-    # litmodel = LitClassification()  #TFModule()
+    litmodel = LitClassification()  #TFModule()
     
 
     
-    y = model(x)
+    # y = model(x)
     
     
     
-    # y = litmodel(x)
+    y = litmodel(x)
     
     print(y.shape)
     # print(y[0].shape, y[1].shape)
     
 # %%
-
+# litmodel.model.conv_1 = Conv2d(3, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation='Swish', bias=False)
 
 
 # %%
 # from 
 
 # %%
+model
