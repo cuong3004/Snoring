@@ -252,23 +252,25 @@ if __name__ == "__main__":
 # litmodel.model.conv_1 = Conv2d(3, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation='Swish', bias=False)
 
 
-# %%
-# from 
+# # %%
+# # from 
 
-# %%
+# # %%
 # model = _get_dymn()
+# # model_new = nn.Sequential(
+# #     model.in_c,
+# #     *model.layers[:7]
+# # )
+
 # model_new = nn.Sequential(
-#     model.in_c,
-#     *model.layers[:2]
+#     litmodel.model.conv_1,
+#     litmodel.model.layer_1,
+#     litmodel.model.layer_2,
+#     litmodel.model.layer_3,
+#     litmodel.model.layer_4,
+#     litmodel.model.layer_5,
 # )
-model_new = nn.Sequential(
-    litmodel.model.conv_1,
-    litmodel.model.layer_1,
-    litmodel.model.layer_2,
-    # litmodel.model.layer_3,
-    # litmodel.model.layer_4,
-    # litmodel.model.layer_5,
-)
-model_new(x[:,:1]).shape
-# %%
-# model.layers[:17]
+# model_new(x[:,:1]).shape
+# # %%
+# # model.layers[:17]
+# litmodel.model
