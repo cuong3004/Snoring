@@ -10,6 +10,44 @@ from sklearn.metrics import classification_report, f1_score, accuracy_score
 from torchmetrics.functional import accuracy, precision, recall, f1_score
 average = 'macro'
 
+def get_mobilevitv3():
+    import argparse
+    opts = argparse.Namespace()
+    
+    setattr(opts,"model.classification.name","mobilevit_v3")
+    setattr(opts,"model.classification.classifier_dropout", 0.1)
+
+    setattr(opts,"model.classification.mit.mode" ,"xx_small_v3")
+    setattr(opts,"model.classification.mit.ffn_dropout", 0.0)
+    setattr(opts,"model.classification.mit.attn_dropout", 0.0)
+    setattr(opts,"model.classification.mit.dropout", 0.05)
+    setattr(opts,"model.classification.mit.number_heads", 4)
+    setattr(opts,"model.classification.mit.no_fuse_local_global_features", False)
+    setattr(opts,"model.classification.mit.conv_kernel_size", 3)
+
+    setattr(opts,"model.classification.activation.name", "swish")
+
+    setattr(opts,"model.normalization.name", "batch_norm_2d")
+    setattr(opts,"model.normalization.momentum", 0.1)
+
+    setattr(opts,"model.activation.name", "swish")
+
+    setattr(opts,"model.activation.layer.global_pool", "mean")
+    setattr(opts,"model.activation.layer.conv_init", "kaiming_normal")
+    setattr(opts,"model.activation.layer.linear_init", "trunc_normal")
+    setattr(opts,"model.activation.layer.linear_init_std_dev", 0.02)
+
+    from cvnets.models.classification.mobilevit import MobileViTv3
+    model =  MobileViTv3(opts)
+    
+    state_dict = torch.load("checkpoint_ema_best.pt", map_location=torch.device('cpu'))
+    model.load_state_dict(state_dict)
+    
+    model.classifier.fc = nn.Linear(in_features=512, out_features=10, bias=True)
+
+
+    return model
+
 class CNNBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride, padding=(0,0), bias=False):
         super(CNNBlock, self).__init__()
@@ -90,7 +128,8 @@ class LitClassification(pl.LightningModule):
         super().__init__()
         
         from models.dymn.model import get_model as get_dymn
-        model = get_dymn(pretrained_name="dymn04_as", width_mult=0.4, num_classes=10)
+        # model = get_dymn(pretrained_name="dymn04_as", width_mult=0.4, num_classes=10)
+        model = get_mobilevitv3()
         self.model = model 
         
         # self.model = mobilenet_v3_small(pretrained=True)
@@ -185,15 +224,25 @@ class LitClassification(pl.LightningModule):
         
 # %%
 if __name__ == "__main__":
-    x = torch.ones([5,3, 128, 345]) #87
-    litmodel = LitClassification()  #TFModule()
+    x = torch.ones([2,3, 128, 345]) #87
+    # litmodel = LitClassification()  #TFModule()
+    
+
+    
+    y = model(x)
     
     
     
-    
-    y = litmodel(x)
+    # y = litmodel(x)
     
     print(y.shape)
     # print(y[0].shape, y[1].shape)
     
+# %%
+
+
+
+# %%
+# from 
+
 # %%
