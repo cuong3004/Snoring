@@ -10,6 +10,11 @@ from sklearn.metrics import classification_report, f1_score, accuracy_score
 from torchmetrics.functional import accuracy, precision, recall, f1_score
 average = 'macro'
 
+def _get_dymn():
+    from models.dymn.model import get_model as get_dymn
+    model = get_dymn(pretrained_name="dymn04_as", width_mult=0.4, num_classes=10)
+    return model
+
 def get_mobilevitv3():
     import argparse
     opts = argparse.Namespace()
@@ -251,4 +256,19 @@ if __name__ == "__main__":
 # from 
 
 # %%
-# model
+# model = _get_dymn()
+# model_new = nn.Sequential(
+#     model.in_c,
+#     *model.layers[:2]
+# )
+model_new = nn.Sequential(
+    litmodel.model.conv_1,
+    litmodel.model.layer_1,
+    litmodel.model.layer_2,
+    # litmodel.model.layer_3,
+    # litmodel.model.layer_4,
+    # litmodel.model.layer_5,
+)
+model_new(x[:,:1]).shape
+# %%
+# model.layers[:17]
