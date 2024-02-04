@@ -89,11 +89,15 @@ class LitClassification(pl.LightningModule):
     def __init__(self):
         super().__init__()
         
-        self.model = mobilenet_v3_small(pretrained=True)
-        self.model.classifier[3] = nn.Linear(self.model.classifier[3].in_features, 10)
+        from models.dymn.model import get_model as get_dymn
+        model = get_dymn(pretrained_name="dymn04_as", width_mult=0.4, num_classes=10)
+        self.model = model 
+        
+        # self.model = mobilenet_v3_small(pretrained=True)
+        # self.model.classifier[3] = nn.Linear(self.model.classifier[3].in_features, 10)
         
         
-        self.model.features[0][0] = nn.Conv2d(2, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        # self.model.features[0][0] = nn.Conv2d(2, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
 
         # self.tf_module = TFModule()
         
@@ -102,12 +106,12 @@ class LitClassification(pl.LightningModule):
     
     def forward(self, x):
         # print()
-        x = x[:,1:]
+        x = x[:,:1]
         # print(x.shape)
         # x = self.tf_module(x)
 
         # print(x.shape)
-        x = self.model(x)
+        x = self.model(x)[0]
         
         return x
         
@@ -183,6 +187,8 @@ class LitClassification(pl.LightningModule):
 if __name__ == "__main__":
     x = torch.ones([5,3, 128, 345]) #87
     litmodel = LitClassification()  #TFModule()
+    
+    
     
     
     y = litmodel(x)
