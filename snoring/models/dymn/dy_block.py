@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from models.dymn.utils import make_divisible, cnn_out_size
-
+import inspect
 
 class DynamicInvertedResidualConfig:
     def __init__(
@@ -21,6 +21,7 @@ class DynamicInvertedResidualConfig:
             dilation: int,
             width_mult: float,
     ):
+        self.save_hyperparameters()
         self.input_channels = self.adjust_channels(input_channels, width_mult)
         self.kernel = kernel
         self.expanded_channels = self.adjust_channels(expanded_channels, width_mult)
@@ -39,7 +40,7 @@ class DynamicInvertedResidualConfig:
     def out_size(self, in_size):
         padding = (self.kernel - 1) // 2 * self.dilation
         return cnn_out_size(in_size, padding, self.dilation, self.kernel, self.stride)
-
+        
 
 class DynamicConv(nn.Module):
     def __init__(self,
@@ -238,8 +239,14 @@ class ContextGen(nn.Module):
         f, t = cf.size(2), ct.size(2)
 
         g_cat = torch.cat([cf, ct], dim=2)
+        
         # joint frequency and time sequence transformation (S_F and S_T in the paper)
         g_cat = self.joint_norm(self.joint_conv(g_cat))
+        import matplotlib.pyplot as plt 
+        # print(g_cat.shape)
+        plt.hist(g_cat.detach().numpy().reshape(-1))
+        plt.show()
+        
         g_cat = self.joint_act(g_cat)
 
         h_cf, h_ct = torch.split(g_cat, [f, t], dim=2)
@@ -273,6 +280,9 @@ class DY_Block(nn.Module):
         if not (1 <= cnf.stride <= 2):
             raise ValueError("illegal stride value")
 
+        
+        self.cnf = cnf
+        self.save_hyperparameters()
         self.use_res_connect = cnf.stride == 1 and cnf.input_channels == cnf.out_channels
         # context_dim is denoted as 'H' in the paper
         self.context_dim = np.clip(make_divisible(cnf.expanded_channels // context_ratio, 8),
@@ -407,3 +417,30 @@ class DY_Block(nn.Module):
         if self.use_res_connect:
             x += inp
         return x
+
+
+def add_to_class(Class):  #@save
+    """Register functions as methods in created class."""
+    def wrapper(obj):
+        setattr(Class, obj.__name__, obj)
+    return wrapper
+
+@add_to_class(DynamicInvertedResidualConfig)
+def save_hyperparameters(self, ignore=[]):
+        """Save function arguments into class attributes."""
+        frame = inspect.currentframe().f_back
+        _, _, _, local_vars = inspect.getargvalues(frame)
+        self.hparams = {k:v for k, v in local_vars.items()
+                        if k not in set(ignore+['self']) and not k.startswith('_')}
+        for k, v in self.hparams.items():
+            setattr(self, k, v)
+
+@add_to_class(DY_Block)
+def save_hyperparameters(self, ignore=[]):
+        """Save function arguments into class attributes."""
+        frame = inspect.currentframe().f_back
+        _, _, _, local_vars = inspect.getargvalues(frame)
+        self.hparams = {k:v for k, v in local_vars.items()
+                        if k not in set(ignore+['self']) and not k.startswith('_')}
+        for k, v in self.hparams.items():
+            setattr(self, k, v)
