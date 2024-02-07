@@ -334,5 +334,5 @@ def get_model(num_classes: int = 527,
              temp_schedule=temp_schedule,
              use_dy_blocks=use_dy_blocks
              )
-    print(m)
+    # print(m)
     return m

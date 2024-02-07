@@ -25,6 +25,61 @@ from typing import (
   Union,
 )
 
+# class ConvNormActivation(nn.Module):
+#     in_channels: int
+#     out_channels: int
+#     kernel_size: Union[int, Tuple[int, ...]]
+#     stride: Union[int, Tuple[int, ...]]
+#     padding: Optional[Union[int, Tuple[int, ...], str]]
+#     groups: int
+#     norm_layer: Optional[Callable[..., nn.Module]]
+#     activation_layer: Optional[Callable[..., nn.Module]]
+#     dilation: Union[int, Tuple[int, ...]]
+#     inplace: Optional[bool]
+#     bias: Optional[bool]
+#     conv_layer: Callable[..., nn.Module]
+
+#     def setup(self):
+#         if self.padding is None:
+#             if isinstance(self.kernel_size, int) and isinstance(self.dilation, int):
+#                 self.padding = ((self.kernel_size - 1) // 2) * self.dilation
+#             else:
+#                 _conv_dim = len(self.kernel_size) if isinstance(self.kernel_size, tuple) else len(self.dilation)
+#                 self.kernel_size = self._make_ntuple(self.kernel_size, _conv_dim)
+#                 self.dilation = self._make_ntuple(self.dilation, _conv_dim)
+#                 self.padding = tuple((self.kernel_size[i] - 1) // 2 * self.dilation[i] for i in range(_conv_dim))
+#         if self.bias is None:
+#             self.bias = self.norm_layer is None
+
+#     def _make_ntuple(self, val, n):
+#         return (val,) * n if isinstance(val, int) else val
+
+#     def __call__(self, x):
+#         layers = [
+#             self.conv_layer(
+#                 self.in_channels,
+#                 self.out_channels,
+#                 self.kernel_size,
+#                 self.stride,
+#                 self.padding,
+#                 dilation=self.dilation,
+#                 groups=self.groups,
+#                 bias=self.bias,
+#             )
+#         ]
+
+#         if self.norm_layer is not None:
+#             layers.append(self.norm_layer())
+
+#         if self.activation_layer is not None:
+#             params = {} if self.inplace is None else {"inplace": self.inplace}
+#             layers.append(self.activation_layer(**params))
+
+#         return nn.Sequential(*layers)(x)
+
+
+
+
 PRNGKey = Any
 Shape = Tuple[int, ...]
 Dtype = Any
@@ -89,7 +144,7 @@ class MyConv(nn.Module):
   features: int
   kernel_size: Union[int, Sequence[int]]
   strides: Union[None, int, Sequence[int]] = 1
-  padding: PaddingLike = 'SAME'
+  padding: PaddingLike = 'VALID'
   input_dilation: Union[None, int, Sequence[int]] = 1
   kernel_dilation: Union[None, int, Sequence[int]] = 1
   feature_group_count: int = 1
@@ -271,7 +326,7 @@ class DynamicConv(nn.Module):
 
     T_max, T_min, T0_slope, T1_slope = temp_schedule
     T_max, T_min, T0_slope, T1_slope = map(jnp.array, (T_max, T_min, T0_slope, T1_slope))
-    temperature = T_max
+    # temperature = T_max
 
     @staticmethod
     def _initialize_weights(key, shape, dtype=jnp.float32):
@@ -283,6 +338,8 @@ class DynamicConv(nn.Module):
         self.residuals = nn.Sequential([
             nn.Dense(self.k * self.att_groups, kernel_init=self._initialize_weights)
         ])
+        
+        self.temperature = self.variable("immutable", "temperature", jnp.array, self.T_max).value
 
         weight_shape = (self.k, self.out_channels, self.in_channels // self.groups, self.kernel_size, self.kernel_size)
         temp = jnp.ones(weight_shape)
@@ -323,11 +380,11 @@ class DynamicConv(nn.Module):
         output = output.reshape((b, self.out_channels, output.shape[-2], output.shape[-1]))
         return output
 
-    def update_params(self, epoch):
-        t0 = self.T_max - self.T0_slope * epoch
-        t1 = 1 + self.T1_slope * (self.T_max - 1) / self.T0_slope - self.T1_slope * epoch
-        self.temperature = max(t0, t1, self.T_min)
-        print(f"Setting temperature for attention over kernels to {self.temperature}")
+    # def update_params(self, epoch):
+    #     t0 = self.T_max - self.T0_slope * epoch
+    #     t1 = 1 + self.T1_slope * (self.T_max - 1) / self.T0_slope - self.T1_slope * epoch
+    #     self.temperature = max(t0, t1, self.T_min)
+    #     print(f"Setting temperature for attention over kernels to {self.temperature}")
 
 
 class DyReLU(nn.Module):
@@ -415,8 +472,8 @@ class ContextGen(nn.Module):
 
         if self.stride > 1:
             # sequence pooling for Coordinate Attention
-            self.pool_f = lambda x: nn.avg_pool(x, window_shape=(3, 1), strides=(self.stride, 1), padding='SAME')
-            self.pool_t = lambda x: nn.avg_pool(x, window_shape=(1, 3), strides=(1, self.stride), padding='SAME')
+            self.pool_f = lambda x: nn.avg_pool(x, window_shape=(3, 1), strides=(self.stride, 1), padding=(1, 0))
+            self.pool_t = lambda x: nn.avg_pool(x, window_shape=(1, 3), strides=(1, self.stride), padding=(0, 1))
         else:
             self.pool_f = Identity()
             self.pool_t = Identity()
@@ -431,7 +488,6 @@ class ContextGen(nn.Module):
         
         g_cat = jnp.concatenate([cf, ct], axis=2)
         g_cat = self.joint_norm(self.joint_conv(g_cat))
-        return g_cat
         g_cat = hard_swish(g_cat)
 
         f, t = cf.shape[2], ct.shape[2]
@@ -573,8 +629,8 @@ class DY_Block(nn.Module):
                     k=self.dyconv_k,
                     temp_schedule=self.temp_schedule,
                     stride=1,
+                    dilation=1,
                     padding=0,
-                    # kernel_init=nn.initializers.xavier_uniform(),
                     use_bias=False
                 )
 
@@ -608,13 +664,13 @@ class DY_Block(nn.Module):
                 cnf.expanded_channels,
                 cnf.expanded_channels,
                 self.context_dim,
-                kernel_size=self.cnf.kernel,
+                kernel_size=cnf.kernel,
                 k=self.dyconv_k,
                 temp_schedule=self.temp_schedule,
+                groups=cnf.expanded_channels,
                 stride=stride,
+                dilation=cnf.dilation,
                 padding=padding,
-                groups=self.cnf.expanded_channels,
-                # kernel_init=nn.initializers.xavier_uniform(),
                 use_bias=False
             )
 
@@ -646,10 +702,11 @@ class DY_Block(nn.Module):
                 k=self.dyconv_k,
                 temp_schedule=self.temp_schedule,
                 stride=1,
+                dilation=1,
                 padding=0,
-                # kernel_init=nn.initializers.xavier_uniform(),
                 use_bias=False,
             )
+            
 
         self.proj_norm = norm_layer()
         self.context_gen = ContextGen(self.context_dim, self.cnf.input_channels, self.cnf.expanded_channels,
@@ -664,34 +721,34 @@ class DY_Block(nn.Module):
         inp = x
 
         g = self.context_gen(x, g)
-        # x = self.exp_conv(x, g)
-        # x = self.exp_norm(x)
-        # x = self.exp_act(x, g)
-        # x = self.depth_conv(x, g)
-        # x = self.depth_norm(x)
-        # x = self.depth_act(x, g)
-        # x = self.ca(x, g)
+        x = self.exp_conv(x, g)
+        x = self.exp_norm(x)
+        x = self.exp_act(x, g)
+        x = self.depth_conv(x, g)
+        x = self.depth_norm(x)
+        x = self.depth_act(x, g)
+        x = self.ca(x, g)
 
-        # x = self.proj_conv(x, g)
-        # x = self.proj_norm(x)
+        x = self.proj_conv(x, g)
+        x = self.proj_norm(x)
 
-        # if self.use_res_connect:
-        #     x += inp
-        return g
+        if self.use_res_connect:
+            x += inp
+        return x
 
     # Here, you would define ContextGen and any other necessary submodules.
     
 
 if __name__ == "__main__":
 # if False:
-    batch_size = 2
+    batch_size = 1
     input_channels = 8
     feature_size = 64
     time_frames = 64
     
     dy_block = DY_Block(
         cnf=DynamicInvertedResidualConfig(
-            activation='RE', 
+            activation='HS', 
             dilation=1, 
             expanded_channels=16, 
             input_channels=16, 
@@ -717,7 +774,7 @@ if __name__ == "__main__":
     params = dy_block.init(key, jnp.ones((batch_size, input_channels, feature_size, time_frames)))
 
     # uniform(key, shape=(1000,))
-    input_data = jax.random.uniform(jax.random.PRNGKey(758493), shape=((batch_size, input_channels, feature_size, time_frames)))
+    input_data = 1-jax.random.uniform(jax.random.PRNGKey(758493), shape=((batch_size, input_channels, feature_size, time_frames)))
     output = dy_block.apply(params, input_data, mutable=['batch_stats'])
 
     # pprint(show_shape(output))
@@ -758,15 +815,14 @@ def transfer_torch2jax_llayer(params, state):
             # pprint(show_shape(params))
             # pprint(show_shape(state))
             print(key, key_)
-            new_value = state[key_].cpu().numpy()
+            new_value = state[key_].detach().cpu().numpy()
             if len(new_value.shape) == 2:
                 new_value = jnp.transpose(new_value, (1, 0))
             params[key] = new_value
-            return
-
-        print(key, key_)
-        transfer_torch2jax_llayer(params[key], state[key_])
-
+        else:
+            print(key, key_)
+            transfer_torch2jax_llayer(params[key], state[key_])
+            
 if __name__ == "__main__":
     def _get_dymn():
         from models.dymn.model import get_model as get_dymn
@@ -781,34 +837,32 @@ if __name__ == "__main__":
     
     model = _get_dymn()
     model.eval()
-    model.layers[0].context_gen.joint_norm.register_forward_hook(get_activation('fc3'))
+    model.layers[0].proj_norm.register_forward_hook(get_activation('fc3'))
     state_dict_py = parse_to_tree(model.state_dict())["layers"]["0"]
     # pprint(model.layers[0].hparams)
     # pprint(show_shape(state_dict_py))
     # pprint(show_shape(params))
     # pprint(show_shape(state_dict_py))
     transfer_torch2jax_llayer(params['params'], state_dict_py)
-    # transfer_torch2jax_llayer(params['batch_stats'], state_dict_py)
+    transfer_torch2jax_llayer(params['batch_stats'], state_dict_py)
     
     import torch
     numpy_array = jax.device_get(input_data)
     torch_tensor = torch.from_numpy(numpy_array)
     outpy = model.layers[0](torch_tensor)
     
-    outpy = activation['fc3']
+    # outpy = activation['fc3']
     # print(outpy)
     
-    a = params["params"]["context_gen"]["joint_conv"]["kernel"]
-    b = model.layers[0].context_gen.state_dict()["joint_conv.weight"]
+    # a = params["params"]["context_gen"]["joint_conv"]["kernel"]
+    # b = model.layers[0].context_gen.state_dict()["joint_conv.weight"]
     outjax = dy_block.apply(params, input_data)
     
     print(outpy.shape, outjax.shape, outjax.dtype)
     import matplotlib.pyplot as plt  
     
     t_out = outpy.detach().cpu().numpy()
-    import numpy as np
-    np.testing.assert_almost_equal(outjax, t_out, decimal=6)
-    
+
     plt.hist(outpy.detach().numpy().reshape(-1))
     plt.show()
     # plt.hist(a.reshape(-1))
@@ -816,6 +870,11 @@ if __name__ == "__main__":
     
     plt.hist(outjax.reshape(-1))
     plt.show()
+    
+    print(model.classifier)
+    
+    import numpy as np
+    np.testing.assert_almost_equal(outjax, t_out, decimal=2)
     
     
     

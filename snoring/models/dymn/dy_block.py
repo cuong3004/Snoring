@@ -242,10 +242,10 @@ class ContextGen(nn.Module):
         
         # joint frequency and time sequence transformation (S_F and S_T in the paper)
         g_cat = self.joint_norm(self.joint_conv(g_cat))
-        import matplotlib.pyplot as plt 
-        # print(g_cat.shape)
-        plt.hist(g_cat.detach().numpy().reshape(-1))
-        plt.show()
+        # import matplotlib.pyplot as plt 
+        # # print(g_cat.shape)
+        # plt.hist(g_cat.detach().numpy().reshape(-1))
+        # plt.show()
         
         g_cat = self.joint_act(g_cat)
 
@@ -378,6 +378,7 @@ class DY_Block(nn.Module):
                 )
             )
         else:
+            
             self.proj_conv = DynamicConv(
                 cnf.expanded_channels,
                 cnf.out_channels,
